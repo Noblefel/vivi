@@ -1,4 +1,4 @@
-Some helpers to get user input from terminal. Thanks to [keyboard](https://github.com/atomicgo/keyboard) from atomic.go
+Some helpers to get user input from terminal. Thanks to [keyboard](https://github.com/atomicgo/keyboard) from atomicgo
 
 ### Example: select from multiple choice
 
