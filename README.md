@@ -1,34 +1,60 @@
 Some helpers to get user input from terminal. Thanks to [keyboard](https://github.com/atomicgo/keyboard) from atomicgo
 
+```go
+go get github.com/Noblefel/vivi
+```
+
 ### Example: select from multiple choice
 
 ```go
-package main
-
-import (
-    "fmt"
-
-    "github.com/Noblefel/vivi"
-)
-
 func main() {
-    for {
-        fmt.Println("==============")
-        fmt.Println("What is 5 * 5 ?")
+	// basic
+	fmt.Println("are you ready to play?")
+	ready := vivi.Choices("Yes", "No")
 
-        answer := vivi.Choices(
-            "[1] 25",
-            "[2] 10",
-            "[3] 50",
-        )
+	if ready == 1 {
+		return
+	}
 
-        if answer == 0 {
-            fmt.Println("✔️  Correct")
-            break
-        }
+	// slice
+	fmt.Println("----------------")
+	fmt.Println("which you like the most ?")
 
-        fmt.Println("❌ Try Again")
-    }
+	foods := []string{
+		"Burger 🍔",
+		"Pizza 🍕",
+		"Sushi 🍣",
+		"Steak 🥩",
+		"Spaghetti 🍝",
+		"Fries 🍟",
+	}
+
+	fav := vivi.Choices(foods...)
+	fmt.Println("me too like", foods[fav], "😋")
 }
 
+```
+
+### Example: passwords
+
+```go
+func main() {
+	fmt.Print("enter password please: ")
+	pw := vivi.Password("*")
+
+	if pw != "abc" {
+		fmt.Println("wrong!!!")
+		return
+	}
+}
+```
+
+### Example: hidden input
+
+```go
+func main() {
+	fmt.Print("say something very secret: ")
+	secret := vivi.Password("")
+	fmt.Println("this secret is safe")
+}
 ```

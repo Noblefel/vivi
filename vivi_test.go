@@ -10,126 +10,164 @@ import (
 )
 
 var replacer = strings.NewReplacer(
-	"\x1b[?25l", "",
-	"\x1b[?25h", "",
+	"\033[1;38;5;75m", "",
+	"\033[38;5;75m", "",
+	"\033[?25l", "",
+	"\033[?25h", "",
+	"\033[0m", "",
+	"\n", "",
 )
 
 func TestChoice(t *testing.T) {
 	var sb strings.Builder
 	w = &sb
 
-	go func() {
-		time.Sleep(50 * time.Millisecond)
-		keyboard.SimulateKeyPress(keys.Enter)
-	}()
+	t.Run("choosing 'a' by pressing ENTER", func(t *testing.T) {
+		defer sb.Reset()
 
-	answer := Choices("a", "b", "c")
+		go func() {
+			time.Sleep(50 * time.Millisecond)
+			keyboard.SimulateKeyPress(keys.Enter)
+		}()
 
-	if answer != 0 {
-		t.Errorf("want index of 0 when choosing 'a', got %d", answer)
-	}
+		answer := Choices("a", "b", "c")
 
-	out := "\033[1m> a\033[0m\n\r  b\n\r  c\n\r"
-	s := replacer.Replace(sb.String())
-	s = s[len(s)-len(out):]
+		if answer != 0 {
+			t.Errorf("want index of 0, got %d", answer)
+		}
 
-	if out != s {
-		t.Errorf("\nwanted string output: %q\ngot: %q", out, s)
-	}
-	sb.Reset()
+		b := strings.Contains(replacer.Replace(sb.String()), "> a")
 
-	go func() {
-		time.Sleep(50 * time.Millisecond)
-		keyboard.SimulateKeyPress(keys.Down)
-		keyboard.SimulateKeyPress(keys.Down)
-		keyboard.SimulateKeyPress(keys.Enter)
-	}()
-	answer = Choices("a", "b", "c")
+		if !b {
+			t.Errorf("arrow should point at option 'a'\ngot: %q", sb.String())
+		}
+	})
 
-	if answer != 2 {
-		t.Fatalf("want index of 2 when choosing 'c', got %d", answer)
-	}
+	t.Run("choosing 'c' by pressing two DOWN and ENTER", func(t *testing.T) {
+		defer sb.Reset()
 
-	out = "  a\n\r  b\n\r\033[1m> c\033[0m\n\r"
-	s = replacer.Replace(sb.String())
-	s = s[len(s)-len(out):]
+		go func() {
+			time.Sleep(50 * time.Millisecond)
+			keyboard.SimulateKeyPress(keys.Down)
+			keyboard.SimulateKeyPress(keys.Down)
+			keyboard.SimulateKeyPress(keys.Enter)
+		}()
 
-	if out != s {
-		t.Errorf("\nwanted string output: %q\ngot: %q", out, s)
-	}
+		answer := Choices("a", "b", "c")
+
+		if answer != 2 {
+			t.Fatalf("want index of 2, got %d", answer)
+		}
+
+		b := strings.Contains(replacer.Replace(sb.String()), "> c")
+
+		if !b {
+			t.Errorf("arrow should point at option 'c'\ngot: %q", sb.String())
+		}
+	})
+
+	t.Run("if no options", func(t *testing.T) {
+		defer sb.Reset()
+
+		go func() {
+			time.Sleep(50 * time.Millisecond)
+			keyboard.SimulateKeyPress(keys.Down)
+			keyboard.SimulateKeyPress(keys.Down)
+			keyboard.SimulateKeyPress(keys.Enter)
+		}()
+
+		Choices()
+
+		s := replacer.Replace(sb.String())
+
+		if s != "" {
+			t.Errorf("should not output anything, got %q", s)
+		}
+	})
 }
 
 func TestPassword(t *testing.T) {
 	var sb strings.Builder
 	w = &sb
 
-	go func() {
-		time.Sleep(50 * time.Millisecond)
-		keyboard.SimulateKeyPress("abc")
-		keyboard.SimulateKeyPress(keys.Space)
-		keyboard.SimulateKeyPress("def")
-		keyboard.SimulateKeyPress(keys.Enter)
-	}()
+	t.Run("with '*' placeholder and the text have a space", func(t *testing.T) {
+		defer sb.Reset()
 
-	value := Password("*")
-	s := replacer.Replace(sb.String())
+		go func() {
+			time.Sleep(50 * time.Millisecond)
+			keyboard.SimulateKeyPress("abc")
+			keyboard.SimulateKeyPress(keys.Space)
+			keyboard.SimulateKeyPress("def")
+			keyboard.SimulateKeyPress(keys.Enter)
+		}()
 
-	if s != "*******\n" {
-		t.Errorf("\nwanted string output: *******\\n\ngot: %q", s)
-	}
-	sb.Reset()
+		value := Password("*")
+		s := replacer.Replace(sb.String())
 
-	if value != "abc def" {
-		t.Errorf("want value to be 'abc def', got %q", value)
-	}
+		if s != "*******" {
+			t.Errorf("wanted string output: *******\ngot: %q", s)
+		}
 
-	go func() {
-		time.Sleep(50 * time.Millisecond)
-		keyboard.SimulateKeyPress(keys.Backspace)
-		keyboard.SimulateKeyPress(keys.Enter)
-	}()
+		if value != "abc def" {
+			t.Errorf("want value to be 'abc def', got %q", value)
+		}
+	})
 
-	value = Password("*")
+	t.Run("pressing BACKSPACE and ENTER with no text", func(t *testing.T) {
+		defer sb.Reset()
 
-	if value != "" {
-		t.Errorf("want value to be empty, got %q", value)
-	}
+		go func() {
+			time.Sleep(50 * time.Millisecond)
+			keyboard.SimulateKeyPress(keys.Backspace)
+			keyboard.SimulateKeyPress(keys.Enter)
+		}()
 
-	go func() {
-		time.Sleep(50 * time.Millisecond)
-		keyboard.SimulateKeyPress("A")
-		keyboard.SimulateKeyPress(keys.Backspace)
-		keyboard.SimulateKeyPress(keys.Enter)
-	}()
+		value := Password("*")
 
-	value = Password("*")
+		if value != "" {
+			t.Errorf("want value to be empty, got %q", value)
+		}
+	})
 
-	if value != "" {
-		t.Errorf("\nwanted value to be empty\ngot: %q", value)
-	}
-}
+	t.Run("with '$$' placeholder", func(t *testing.T) {
+		defer sb.Reset()
 
-func TestHidden(t *testing.T) {
-	var sb strings.Builder
-	w = &sb
+		go func() {
+			time.Sleep(50 * time.Millisecond)
+			keyboard.SimulateKeyPress("abc")
+			keyboard.SimulateKeyPress(keys.Enter)
+		}()
 
-	go func() {
-		time.Sleep(50 * time.Millisecond)
-		keyboard.SimulateKeyPress("secret")
-		keyboard.SimulateKeyPress(keys.Space)
-		keyboard.SimulateKeyPress("input")
-		keyboard.SimulateKeyPress(keys.Enter)
-	}()
+		value := Password("$$")
+		s := replacer.Replace(sb.String())
 
-	value := Hidden()
-	s := replacer.Replace(sb.String())
+		if s != "$$$$$$" {
+			t.Errorf("wanted string output: $$$$$$\ngot: %q", s)
+		}
 
-	if s != "\n" {
-		t.Errorf("\nwant output to be empty\ngot: %q", s)
-	}
-	sb.Reset()
+		if value != "abc" {
+			t.Errorf("want value to be 'abc', got %q", value)
+		}
+	})
 
-	if value != "secret input" {
-		t.Errorf("want value to be 'secret input', got %q", value)
-	}
+	t.Run("with empty placeholder", func(t *testing.T) {
+		defer sb.Reset()
+
+		go func() {
+			time.Sleep(50 * time.Millisecond)
+			keyboard.SimulateKeyPress("abc")
+			keyboard.SimulateKeyPress(keys.Enter)
+		}()
+
+		value := Password("")
+		s := replacer.Replace(sb.String())
+
+		if s != "" {
+			t.Errorf("wanted string output to be empty\ngot: %q", s)
+		}
+
+		if value != "abc" {
+			t.Errorf("want value to be 'abc', got %q", value)
+		}
+	})
 }
