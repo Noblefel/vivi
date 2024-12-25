@@ -13,9 +13,10 @@ import (
 
 var w io.Writer = os.Stdout
 
+func init() { fmt.Fprint(w, "\033[?25l") }
+
 // Choices list out the options and return the selected index after enter keypress.
 func Choices(options ...string) int {
-	fmt.Fprint(w, "\033[?25l")
 	printChoices(0, options)
 	current := 0
 
@@ -54,7 +55,6 @@ func Choices(options ...string) int {
 		return false, nil
 	})
 
-	fmt.Fprintf(w, "\033[?25h")
 	return current
 }
 
