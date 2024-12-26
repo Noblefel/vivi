@@ -20,7 +20,7 @@ var replacer = strings.NewReplacer(
 
 func TestChoice(t *testing.T) {
 	var sb strings.Builder
-	w = &sb
+	Out = &sb
 
 	t.Run("choosing 'a' by pressing ENTER", func(t *testing.T) {
 		defer sb.Reset()
@@ -88,7 +88,7 @@ func TestChoice(t *testing.T) {
 
 func TestPassword(t *testing.T) {
 	var sb strings.Builder
-	w = &sb
+	Out = &sb
 
 	t.Run("with '*' placeholder and the text have a space", func(t *testing.T) {
 		defer sb.Reset()

@@ -11,9 +11,9 @@ import (
 	"atomicgo.dev/keyboard/keys"
 )
 
-var w io.Writer = os.Stdout
+var Out io.Writer = os.Stdout
 
-func init() { fmt.Fprint(w, "\033[?25l") }
+func init() { fmt.Fprint(Out, "\033[?25l") }
 
 // Choices list out the options and return the selected index after enter keypress.
 func Choices(options ...string) int {
@@ -49,8 +49,8 @@ func Choices(options ...string) int {
 			}
 		}
 
-		fmt.Fprintf(w, "\033[%dA", len(options))
-		fmt.Fprint(w, "\033[0J")
+		fmt.Fprintf(Out, "\033[%dA", len(options))
+		fmt.Fprint(Out, "\033[0J")
 		printChoices(current, options)
 		return false, nil
 	})
@@ -61,10 +61,10 @@ func Choices(options ...string) int {
 func printChoices(current int, options []string) {
 	for i, o := range options {
 		if current == i {
-			fmt.Fprintf(w, "\033[1;38;5;75m>\033[0m ")
-			fmt.Fprintf(w, "\033[38;5;75m%s\033[0m\n\r", o)
+			fmt.Fprint(Out, "\033[1;38;5;75m>\033[0m ")
+			fmt.Fprintf(Out, "\033[38;5;75m%s\033[0m\n\r", o)
 		} else {
-			fmt.Fprintf(w, "  %s\n\r", o)
+			fmt.Fprintf(Out, "  %s\n\r", o)
 		}
 	}
 }
@@ -84,23 +84,23 @@ func Password(placeholder string) string {
 
 		if key.Code == keys.Backspace && len(buf) > 0 {
 			buf = buf[:len(buf)-1]
-			fmt.Fprint(w, "\033[1D\033[K")
+			fmt.Fprint(Out, "\033[1D\033[K")
 			return false, nil
 		}
 
 		if key.Code == keys.Space {
 			buf = append(buf, ' ')
-			fmt.Fprint(w, placeholder)
+			fmt.Fprint(Out, placeholder)
 		}
 
 		if key.Code == keys.RuneKey {
 			buf = append(buf, key.Runes...)
-			fmt.Fprint(w, placeholder)
+			fmt.Fprint(Out, placeholder)
 		}
 
 		return false, nil
 	})
 
-	fmt.Fprintf(w, "\n")
+	fmt.Fprintf(Out, "\n")
 	return string(buf)
 }
